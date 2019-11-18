@@ -34,6 +34,8 @@
 #define LAMP_1 "lamp one"
 #define LAMP_2 "lamp two"
 #define TV_ROTATION "rotate tv"
+#define TV "tv"
+#define JUST_TV "just the tv"
 #define BLUE_LIGHT_SPECIAL "blue light special"
 fauxmoESP fauxmo;
 
@@ -89,13 +91,26 @@ bool shouldMove = false;
 bool shouldHome = false;
 bool shouldPowerOn = false;
 bool shouldPowerOff = false;
-
+bool shouldPowerCycle = false;
 
 
 ////////////////////////////
 void tvPowerOn(){
   //power up procedure here
+  if (shouldPowerOn == true){
+    MODE = AUTOMATIC;
+    targetPosition = memPosition[2];
+    //TODO add hall effect limit code
+    stepper.setSpeed(200);
+    digitalWrite(SLEEP, HIGH);
+    stepper.step(96);
+    delay(2);
+    digitalWrite(SLEEP, LOW);
+    //TODO add send power signal to tv here
+  }
 }
+
+//add a function to cycle tv power, just in case
 
 void moveleft(){
   if(shouldMove == true){
@@ -110,6 +125,16 @@ void moveleft(){
 
 void tvPowerOff(){
   //power down procedure here
+  //TODO add send power signal to tv here
+  //homefunction();
+  while (digitalRead(HALL_SENSOR_Tvhome_Front)== 1) {
+    digitalWrite(SLEEP, HIGH);
+    stepper.step(-360);
+  }
+  MODE = AUTOMATIC;
+  targetPosition = memPosition[0];
+  //TODO add hall effect limit switch here
+
 }
 
 void homefunction() {
@@ -205,6 +230,7 @@ void setup() {
   fauxmo.addDevice(LAMP_1);
   fauxmo.addDevice(LAMP_2);
   fauxmo.addDevice(TV_ROTATION);
+  fauxmo.addDevice(TV);
   //fauxmo.addDevice(BLUE_LIGHT_SPECIAL);//test device remove on final version
   
   fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state, unsigned char value){
@@ -243,6 +269,13 @@ void setup() {
         digitalWrite(SLEEP, LOW);
       }
     }
+    if( (strcmp(device_name, TV) == 0) ){
+      if (state) {
+        shouldPowerOn = true;
+      }else{
+        shouldPowerOff = true;
+      }
+    }
     /*if ( (strcmp(device_name, BLUE_LIGHT_SPECIAL) == 0) ){
       if (state) {
         flash();
@@ -260,6 +293,8 @@ void loop() {
   // Therefore, we have to manually poll for UDP packets
   fauxmo.handle();
   moveleft();
+  tvPowerOn();
+  tvPowerOff();
   btnExtend.read();
   btnRetract.read();
   btnSetPos.read();
@@ -367,6 +402,11 @@ void loop() {
 
   case 0x20DF10EF:
   //powerbutton
+  if (newPosition = memPosition[2]) {
+    tvPowerOff();
+  }else if (newPosition = memPosition[0]) {
+    tvPowerOn();
+  }
   break;
 
   case 0x20DF22DD:
