@@ -7,9 +7,9 @@
   #define STEPS 48
   #define SLEEP   12
   #define HALL_SENSOR_Tvhome_Front  36
-  //#define HALL_SENSOR_Tvhome_Back 
-  //#define HALL_SENSOR_LIMIT_Top
-  //#define HALL_SENSOR_LIMIT_BOTTOM
+  //#define HALL_SENSOR_Tvhome_Back 39
+  #define HALL_SENSOR_LIMIT_Top 34
+  #define HALL_SENSOR_LIMIT_BOTTOM 35
   #define RELAY_PIN_1 32
   #define RELAY_PIN_2 33
 #else
@@ -36,7 +36,7 @@
 #define TV_ROTATION "rotate tv"
 #define TV "tv"
 #define JUST_TV "just the tv"
-#define BLUE_LIGHT_SPECIAL "blue light special"
+//#define BLUE_LIGHT_SPECIAL "blue light special"
 fauxmoESP fauxmo;
 
 
@@ -59,6 +59,7 @@ IRrecv irrecv(kRecvPin);
 
 decode_results results;
 
+//int stauts[] = {0};
 //Set up the linear actuator encoder
 //On many of the Arduino boards pins 2 and 3 are interrupt pins
 // which provide the best performance of the encoder data.
@@ -86,6 +87,11 @@ long memPosition[] = {0,0,0};
 void retractActuator();
 void extendActuator();
 void stopActuator();
+
+
+
+
+
 //////////flags/////////////
 bool shouldMove = false;
 bool shouldHome = false;
@@ -101,12 +107,18 @@ void tvPowerOn(){
     MODE = AUTOMATIC;
     targetPosition = memPosition[2];
     //TODO add hall effect limit code
+    
+  
+  if (digitalRead(HALL_SENSOR_LIMIT_Top)== 0){
     stepper.setSpeed(200);
     digitalWrite(SLEEP, HIGH);
     stepper.step(96);
     delay(2);
     digitalWrite(SLEEP, LOW);
     //TODO add send power signal to tv here
+    shouldPowerOn = false;
+    }
+
   }
 }
 
@@ -124,6 +136,7 @@ void moveleft(){
 }
 
 void tvPowerOff(){
+  if(shouldPowerOff == true){
   //power down procedure here
   //TODO add send power signal to tv here
   //homefunction();
@@ -131,10 +144,14 @@ void tvPowerOff(){
     digitalWrite(SLEEP, HIGH);
     stepper.step(-360);
   }
+  if (digitalRead(HALL_SENSOR_Tvhome_Front)== 0){
   MODE = AUTOMATIC;
   targetPosition = memPosition[0];
   //TODO add hall effect limit switch here
-
+  shouldPowerOff = false;
+  }
+  
+  }
 }
 
 void homefunction() {
@@ -200,8 +217,8 @@ void setup() {
   pinMode(led, OUTPUT);
   pinMode(HALL_SENSOR_Tvhome_Front, INPUT);
   //pinMode(HALL_SENSOR_Tvhome_Back, INPUT);
-  //pinMode(HALL_SENSOR_LIMIT_Top, INPUT);
-  //pinMode(HALL_SENSOR_LIMIT_BOTTOM, INPUT);
+  pinMode(HALL_SENSOR_LIMIT_Top, INPUT);
+  pinMode(HALL_SENSOR_LIMIT_BOTTOM, INPUT);
   pinMode(SLEEP, OUTPUT);
 
   // LED
@@ -301,7 +318,7 @@ void loop() {
   btnPos1.read();
   btnPos2.read();
   btnPos3.read();
-//int Hallreading = digitalRead(HALL_SENSOR);  // for reading hall effect senor output, note that this negates home function
+//int Hallreading = digitalRead(HALL_SENSOR_LIMIT_Top);  // for reading hall effect senor output, note that this negates home function
 //int hallreading = analogRead(HALL_SENSOR);
 //Serial.println(hallreading);
 //Serial.println(Hallreading);
@@ -373,7 +390,6 @@ void loop() {
   if(btnSetPos.isPressed()) {
    if(btnPos1.isPressed())
      memPosition[0] = newPosition;
-     //Serial.println("memposition1 set");
    if(btnPos2.isPressed())
      memPosition[1] = newPosition;
    if(btnPos3.isPressed())
@@ -402,10 +418,11 @@ void loop() {
 
   case 0x20DF10EF:
   //powerbutton
-  if (newPosition = memPosition[2]) {
-    tvPowerOff();
-  }else if (newPosition = memPosition[0]) {
-    tvPowerOn();
+ 
+ if (digitalRead(HALL_SENSOR_LIMIT_BOTTOM)== 1 && digitalRead(HALL_SENSOR_LIMIT_Top)== 0) {
+    shouldPowerOff = true;
+  }else if (digitalRead(HALL_SENSOR_LIMIT_BOTTOM)== 0 && digitalRead(HALL_SENSOR_LIMIT_Top)== 1) {
+    shouldPowerOn = true;
   }
   break;
 
