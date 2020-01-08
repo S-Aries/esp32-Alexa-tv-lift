@@ -25,11 +25,13 @@
 #include <IRrecv.h>
 #include <JC_Button.h>
 #include <Encoder.h>
-
+#include <HardwareSerial.h>
+#include "soc/uart_reg.h"
+#include "esp32_rmt.h"
 #define SERIAL_BAUDRATE 115200
 
-#define WIFI_SSID "NETGEAR28"
-#define WIFI_PASS "sweetnest364"
+#define WIFI_SSID ""
+#define WIFI_PASS ""
 
 #define LAMP_1 "lamp one"
 #define LAMP_2 "lamp two"
@@ -69,7 +71,7 @@ long targetPosition = 0;
 #define ACCURACY 10       //How close to your target position is close enough. Higher accuracy may result in 
                // a bit of jitter as the actuator nears the position
 #define DEBOUNCE_MS 20     //A debounce time of 20 milliseconds usually works well for tactile button switches.
-#define PULLUP false        //To keep things simple, we use the Arduino's internal pullup resistor.
+//#define PULLUP false        //To keep things simple, we use the Arduino's internal pullup resistor.
 #define INVERT true        //Since the pullup resistor will keep the pin high unless the
                //switch is closed, this is negative logic, i.e. a high state
                //means the button is NOT pressed. (Assuming a normally open switch.)
@@ -116,6 +118,10 @@ void tvPowerOn(){
     delay(2);
     digitalWrite(SLEEP, LOW);
     //TODO add send power signal to tv here
+    /*Serial.begin(115200);
+    Serial2.begin(115200);
+    HardwareSerial Serial2 (2); //gpio 26, physically pin 29
+    WRITE_PERI_REG(0x20DF10EF,);*/
     shouldPowerOn = false;
     }
 
