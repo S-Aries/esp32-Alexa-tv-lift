@@ -1,3 +1,6 @@
+/* Code by Scot-Alan, open for public use, not to be monetized! */
+
+
 #include <Arduino.h>
 #ifdef ESP32
   #include <WiFi.h>
