@@ -1,4 +1,5 @@
 /* Code by Scot-Alan, open for public use, not to be monetized! */
+//will give credit to borrowed code.
 
 
 #include <Arduino.h>
