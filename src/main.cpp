@@ -4,8 +4,6 @@
 #include <Arduino.h>
 #ifdef ESP32
   #include <WiFi.h>
-
-
   #define led 22
   #define STEPS 48
   #define SLEEP   12
